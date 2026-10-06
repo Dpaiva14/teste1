@@ -174,9 +174,10 @@ describe("snapToSwing", () => {
     expect(snapToSwing(candles, 3, "low", 2)).toBe(5);
     expect(snapToSwing(candles, 3, "low", 1)).toBe(4);
   });
-  it("clamps to the series bounds", async () => {
+  it("clicks outside the series snap to the nearest edge candle", async () => {
     const { snapToSwing } = await import("./snap");
-    expect(snapToSwing(candles, -5, "high", 3)).toBe(2);
+    expect(snapToSwing(candles, -5, "high", 3)).toBe(0);
     expect(snapToSwing(candles, 99, "low", 3)).toBe(5);
+    expect(snapToSwing(candles, -1, "high", 3)).toBe(2); // window [−4, 2] still reaches candle 2
   });
 });
