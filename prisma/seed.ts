@@ -121,11 +121,17 @@ async function seedCurriculum() {
 }
 
 async function seedGlossary() {
-  for (const g of GLOSSARY) {
-    const data = { term: g.term, category: g.category, definition: g.definition, simpleExplanation: g.simple, technicalExplanation: g.technical, example: g.example, related: [...g.related] };
-    await prisma.glossaryTerm.upsert({ where: { slug: g.slug }, create: { slug: g.slug, ...data }, update: data });
+  // Insert-only: terms edited in /admin are never overwritten. SEED_FORCE=1 resets them to the code version.
+  const rows = GLOSSARY.map((g) => ({ slug: g.slug, term: g.term, category: g.category, definition: g.definition, simpleExplanation: g.simple, technicalExplanation: g.technical, example: g.example, related: [...g.related] }));
+  if (FORCE) {
+    for (const r of rows) {
+      const { slug, ...data } = r;
+      await prisma.glossaryTerm.upsert({ where: { slug }, create: r, update: data });
+    }
+  } else {
+    await prisma.glossaryTerm.createMany({ data: rows, skipDuplicates: true });
   }
-  console.log(`✓ glossary: ${GLOSSARY.length} terms`);
+  console.log(`✓ glossary: ${GLOSSARY.length} terms in code, ${await prisma.glossaryTerm.count()} in database`);
 }
 
 async function seedAchievements() {
