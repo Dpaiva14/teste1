@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Design tokens. Dark is the primary experience (class "dark" on <html>);
+   the light theme is a supported secondary. Names follow the shadcn/ui convention
+   so `npx shadcn add <component>` keeps working.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  --radius: 0.625rem;
+
+  --background: #f6f8fc;
+  --foreground: #0b1220;
+  --card: #ffffff;
+  --card-foreground: #0b1220;
+  --popover: #ffffff;
+  --popover-foreground: #0b1220;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #e8edf7;
+  --secondary-foreground: #14213d;
+  --muted: #eef2f9;
+  --muted-foreground: #55627d;
+  --accent: #e3ebfb;
+  --accent-foreground: #14213d;
+  --border: #d9e0ee;
+  --input: #cfd8ea;
+  --ring: #2563eb;
+
+  --success: #15803d;
+  --success-foreground: #ffffff;
+  --danger: #dc2626;
+  --danger-foreground: #ffffff;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --info: #1d4ed8;
+
+  --candle-up: #16a34a;
+  --candle-down: #dc2626;
+  --chart-grid: #e3e9f4;
+  --chart-axis: #66738f;
+  --chart-bg: #ffffff;
+}
+
+.dark {
+  --background: #070b14;
+  --foreground: #e7ecf6;
+  --card: #0d1424;
+  --card-foreground: #e7ecf6;
+  --popover: #0d1424;
+  --popover-foreground: #e7ecf6;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #131c33;
+  --secondary-foreground: #dbe4f5;
+  --muted: #0f1729;
+  --muted-foreground: #8a96b2;
+  --accent: #17233f;
+  --accent-foreground: #e7ecf6;
+  --border: #1b2742;
+  --input: #22304f;
+  --ring: #3b82f6;
+
+  --success: #22c55e;
+  --success-foreground: #04130a;
+  --danger: #f05252;
+  --danger-foreground: #1c0505;
+  --warning: #f5b301;
+  --warning-foreground: #1d1500;
+  --info: #60a5fa;
+
+  --candle-up: #22c55e;
+  --candle-down: #ef4444;
+  --chart-grid: #16213a;
+  --chart-axis: #7886a6;
+  --chart-bg: #0a1121;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-candle-up: var(--candle-up);
+  --color-candle-down: var(--candle-down);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Lesson / markdown typography (kept small & local instead of pulling the typography plugin). */
+.prose-academy {
+  @apply text-[0.975rem] leading-7 text-foreground/90;
+}
+.prose-academy > * + * {
+  @apply mt-4;
+}
+.prose-academy h2 {
+  @apply mt-8 text-xl font-semibold tracking-tight text-foreground;
+}
+.prose-academy h3 {
+  @apply mt-6 text-lg font-semibold text-foreground;
+}
+.prose-academy p {
+  @apply text-foreground/90;
+}
+.prose-academy strong {
+  @apply font-semibold text-foreground;
+}
+.prose-academy ul {
+  @apply list-disc space-y-1.5 pl-6 marker:text-muted-foreground;
+}
+.prose-academy ol {
+  @apply list-decimal space-y-1.5 pl-6 marker:text-muted-foreground;
+}
+.prose-academy a {
+  @apply text-primary underline underline-offset-4 hover:opacity-80;
+}
+.prose-academy blockquote {
+  @apply rounded-r-md border-l-4 border-primary/60 bg-primary/5 px-4 py-3 text-foreground/90;
+}
+.prose-academy code {
+  @apply rounded bg-muted px-1.5 py-0.5 font-mono text-[0.85em] text-foreground;
+}
+.prose-academy pre {
+  @apply overflow-x-auto rounded-lg border bg-muted p-4 font-mono text-sm;
+}
+.prose-academy pre code {
+  @apply bg-transparent p-0;
+}
+.prose-academy table {
+  @apply w-full border-collapse overflow-hidden rounded-lg border text-sm;
+}
+.prose-academy th {
+  @apply bg-muted px-3 py-2 text-left font-semibold text-foreground;
+}
+.prose-academy td {
+  @apply border-t px-3 py-2 align-top;
+}
+.prose-academy hr {
+  @apply my-8 border-border;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Numeric columns line up in tables and stat tiles. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

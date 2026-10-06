@@ -138,15 +138,17 @@ enum TutorRole {
 // ───────────────────────────── Identity ─────────────────────────────
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String
-  passwordHash  String? // null for accounts created only through OAuth
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(STUDENT)
-  timezone      String    @default("UTC")
-  disabledAt    DateTime?
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  passwordHash   String? // null for accounts created only through OAuth
+  emailVerified  DateTime?
+  image          String?
+  role           Role      @default(STUDENT)
+  timezone       String    @default("UTC")
+  disabledAt     DateTime?
+  // Bumped on password reset/change; JWTs carry the version they were issued with, so old sessions die.
+  sessionVersion Int       @default(0)
 
   // Gamification (denormalised from XpEvent for fast reads)
   xp            Int       @default(0)
