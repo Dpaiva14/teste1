@@ -26,6 +26,8 @@ export interface TicketProps {
   disabled?: boolean;
   /** shown above the form (e.g. "o feed terminou") */
   notice?: string;
+  /** instrument preselected in the ticket (e.g. the symbol the chart is showing) */
+  defaultSymbol?: string;
   onSubmit: (input: OpenTradeInput) => Promise<boolean>;
 }
 
@@ -33,8 +35,8 @@ export interface TicketProps {
  * Order ticket shared by the simulator and chart replay. Size comes FROM the risk budget and the stop distance;
  * the dollar risk is always shown next to the number of contracts. The checklist warns, it never blocks.
  */
-export function TradeTicket({ bids, equity, freeMargin, atr, disabled, notice, onSubmit }: TicketProps) {
-  const [symbol, setSymbol] = useState("MYM");
+export function TradeTicket({ bids, equity, freeMargin, atr, disabled, notice, defaultSymbol = "MYM", onSubmit }: TicketProps) {
+  const [symbol, setSymbol] = useState(defaultSymbol);
   const [direction, setDirection] = useState<"LONG" | "SHORT">("LONG");
   const [riskPct, setRiskPct] = useState("1");
   const [stopPts, setStopPts] = useState("");
