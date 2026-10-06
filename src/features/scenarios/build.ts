@@ -1,6 +1,7 @@
 import { scriptedSeries } from "@/lib/market-data/demo-generator";
 import { detectSwings, labelStructure, type LabelledSwing } from "@/lib/market-data/indicators";
 import type { Candle } from "@/lib/market-data/types";
+import type { ChartOverlay } from "@/features/chart/types";
 import type { ScenarioDef } from "@/modules/scenarios/types";
 
 export function buildScenarioCandles(def: ScenarioDef): Candle[] {
@@ -36,7 +37,7 @@ export function detectedSwings(candles: readonly Candle[]) {
 }
 
 /** Marker overlays (HH/HL/LH/LL) generated from the intended swings of a structure scenario. */
-export function structureOverlays(def: ScenarioDef): import("@/features/chart/types").ChartOverlay[] {
+export function structureOverlays(def: ScenarioDef): ChartOverlay[] {
   return intendedSwings(def).map((s) => ({
     type: "marker" as const,
     id: `swing-${s.index}`,

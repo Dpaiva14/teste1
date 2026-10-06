@@ -1,31 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import type { ExerciseSpec } from "@/modules/types";
+import { ConfluenceLab } from "./confluence-lab";
+import { FibonacciLab } from "./fibonacci-lab";
+import { LevelsLab } from "./levels-lab";
+import { StructureLab } from "./structure-lab";
 
-const LAB_ROUTE = {
-  structure: { href: "/labs/market-structure", label: "Market Structure Lab" },
-  levels: { href: "/labs/levels", label: "Draw Your Levels" },
-  fibonacci: { href: "/labs/fibonacci", label: "Fibonacci Lab" },
-  confluence: { href: "/labs/confluence", label: "Confluence Lab" },
-} as const;
+type LabSpec = Extract<ExerciseSpec, { kind: "structure" | "levels" | "fibonacci" | "confluence" }>;
 
-/** Placeholder until the labs are embedded inline (replaced by the real lab components). */
-export function LabEmbed({ spec }: { spec: Extract<ExerciseSpec, { kind: "structure" | "levels" | "fibonacci" | "confluence" }> }) {
-  const lab = LAB_ROUTE[spec.kind];
+/** Renders a lab inline inside a lesson, locked to one scenario. */
+export function LabEmbed({ spec }: { spec: LabSpec }) {
+  const scenarios = [{ id: spec.scenarioId, title: spec.scenarioId, bestScore: null }];
   return (
-    <Card>
-      <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
-        <p className="text-sm">{spec.prompt ?? "Pratica este conceito num gráfico interativo."}</p>
-        <Button asChild>
-          <Link href={`${lab.href}?scenario=${spec.scenarioId}`}>
-            Abrir {lab.label} <ArrowRight />
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="grid gap-3">
+      {spec.prompt && <p className="text-sm text-muted-foreground">{spec.prompt}</p>}
+      {spec.kind === "structure" && <StructureLab scenarios={scenarios} compact />}
+      {spec.kind === "levels" && <LevelsLab scenarios={scenarios} compact />}
+      {spec.kind === "fibonacci" && <FibonacciLab scenarios={scenarios} compact />}
+      {spec.kind === "confluence" && <ConfluenceLab scenarios={scenarios} compact />}
+    </div>
   );
 }

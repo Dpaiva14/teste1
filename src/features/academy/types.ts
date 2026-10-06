@@ -1,6 +1,7 @@
 import type { DiagramId, ExerciseSpec, VisualSpec } from "@/modules/types";
 import type { DevelopmentStage } from "@/modules/levels";
 import type { AchievementDef } from "@/modules/achievements";
+import type { Candle } from "@/lib/market-data/types";
 
 export type LessonStatus = "not_started" | "in_progress" | "completed";
 
@@ -72,7 +73,7 @@ export interface QuizChartDTO {
   symbol: string;
   timeframe: string;
   priceDecimals: number;
-  candles: import("@/lib/market-data/types").Candle[];
+  candles: Candle[];
 }
 
 export interface QuestionFeedbackDTO {

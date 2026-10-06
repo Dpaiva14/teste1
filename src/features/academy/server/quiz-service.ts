@@ -1,5 +1,5 @@
 import "server-only";
-import { Prisma, prisma } from "@/database/client";
+import { prisma, type Prisma } from "@/database/client";
 import { buildScenarioCandles } from "@/features/scenarios/build";
 import { awardXp, evaluateAchievements, recordActivity, XP } from "@/features/gamification/server/gamification-service";
 import { HttpError, forbidden, notFound } from "@/lib/errors";

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,10 +17,11 @@ import { LabEmbed } from "@/features/labs/components/lab-embed";
 
 function Reflection({ lessonId, prompt, placeholder }: { lessonId: string; prompt: string; placeholder?: string }) {
   const key = `reflection:${lessonId}`;
-  const [text, setText] = useState("");
+  const ref = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
+    // Sync the uncontrolled textarea with what this browser saved earlier (external system: localStorage).
     try {
-      setText(localStorage.getItem(key) ?? "");
+      if (ref.current) ref.current.value = localStorage.getItem(key) ?? "";
     } catch {
       /* storage unavailable */
     }
@@ -30,11 +31,11 @@ function Reflection({ lessonId, prompt, placeholder }: { lessonId: string; promp
       <CardContent className="grid gap-3 p-5">
         <p className="font-medium">{prompt}</p>
         <Textarea
-          value={text}
+          ref={ref}
+          defaultValue=""
           rows={4}
           placeholder={placeholder}
           onChange={(e) => {
-            setText(e.target.value);
             try {
               localStorage.setItem(key, e.target.value);
             } catch {

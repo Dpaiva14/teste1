@@ -1,7 +1,10 @@
+import { CONFLUENCE_SCENARIOS } from "./confluence";
+import { FIB_SCENARIOS } from "./fibonacci";
+import { LEVEL_SCENARIOS } from "./levels";
 import { STRUCTURE_SCENARIOS } from "./structure";
 import type { ScenarioDef } from "./types";
 
-export const SCENARIOS: readonly ScenarioDef[] = [...STRUCTURE_SCENARIOS];
+export const SCENARIOS: readonly ScenarioDef[] = [...STRUCTURE_SCENARIOS, ...LEVEL_SCENARIOS, ...FIB_SCENARIOS, ...CONFLUENCE_SCENARIOS];
 
 const byId = new Map(SCENARIOS.map((s) => [s.id, s]));
 

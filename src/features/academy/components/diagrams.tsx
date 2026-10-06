@@ -4,34 +4,35 @@ import type { DiagramId } from "@/modules/types";
 
 /** Static explanatory diagrams referenced by lessons (`visual: { kind: "diagram", id }`). Server-renderable. */
 
-function CandleAnatomy() {
-  const Candle = ({ x, up, label }: { x: number; up: boolean; label: string }) => {
-    const col = up ? "var(--candle-up)" : "var(--candle-down)";
-    const top = up ? 90 : 70;
-    const bottom = up ? 150 : 130;
-    return (
-      <g>
-        <line x1={x} x2={x} y1={40} y2={190} stroke={col} strokeWidth={3} />
-        <rect x={x - 22} y={top} width={44} height={bottom - top} fill={col} rx={2} />
-        <text x={x} y={215} textAnchor="middle" fontSize={13} fontWeight={600} fill="var(--foreground)">
-          {label}
-        </text>
-        <g fontSize={11} fill="var(--muted-foreground)">
-          <text x={x + 32} y={46}>High</text>
-          <text x={x + 32} y={194}>Low</text>
-          <text x={x + 32} y={up ? 94 : 74}>{up ? "Close" : "Open"}</text>
-          <text x={x + 32} y={up ? 150 : 134}>{up ? "Open" : "Close"}</text>
-          <text x={x - 90} y={up ? 124 : 104}>Corpo</text>
-          <text x={x - 112} y={66}>Pavio sup.</text>
-          <text x={x - 112} y={176}>Pavio inf.</text>
-        </g>
+function AnatomyCandle({ x, up, label }: { x: number; up: boolean; label: string }) {
+  const col = up ? "var(--candle-up)" : "var(--candle-down)";
+  const top = up ? 90 : 70;
+  const bottom = up ? 150 : 130;
+  return (
+    <g>
+      <line x1={x} x2={x} y1={40} y2={190} stroke={col} strokeWidth={3} />
+      <rect x={x - 22} y={top} width={44} height={bottom - top} fill={col} rx={2} />
+      <text x={x} y={215} textAnchor="middle" fontSize={13} fontWeight={600} fill="var(--foreground)">
+        {label}
+      </text>
+      <g fontSize={11} fill="var(--muted-foreground)">
+        <text x={x + 32} y={46}>High</text>
+        <text x={x + 32} y={194}>Low</text>
+        <text x={x + 32} y={up ? 94 : 74}>{up ? "Close" : "Open"}</text>
+        <text x={x + 32} y={up ? 150 : 134}>{up ? "Open" : "Close"}</text>
+        <text x={x - 90} y={up ? 124 : 104}>Corpo</text>
+        <text x={x - 112} y={66}>Pavio sup.</text>
+        <text x={x - 112} y={176}>Pavio inf.</text>
       </g>
-    );
-  };
+    </g>
+  );
+}
+
+function CandleAnatomy() {
   return (
     <svg viewBox="0 0 520 230" role="img" aria-label="Anatomia de um candle: open, high, low, close, corpo e pavios" className="mx-auto h-auto w-full max-w-xl">
-      <Candle x={140} up label="Bullish (fecha acima da abertura)" />
-      <Candle x={390} up={false} label="Bearish (fecha abaixo da abertura)" />
+      <AnatomyCandle x={140} up label="Bullish (fecha acima da abertura)" />
+      <AnatomyCandle x={390} up={false} label="Bearish (fecha abaixo da abertura)" />
     </svg>
   );
 }

@@ -440,7 +440,7 @@ export function CandleChart({
         height={height}
         role="img"
         aria-label={ariaLabel}
-        className={cn("block", interactive ? "cursor-crosshair touch-none" : "")}
+        className={cn("block", mode === "click" && "cursor-crosshair touch-pan-y", mode === "drag" && "cursor-crosshair touch-none")}
         onPointerDown={(e) => {
           if (!interactive) return;
           const p = toPoint(e.clientX, e.clientY);
