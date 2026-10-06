@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleDot, Circle, Clock, Lock, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, CheckCircle2, CircleDot, Circle, Clock, Lock, Sparkles } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { ModuleIcon } from "@/components/module-icon";
 import { Badge } from "@/components/ui/badge";
@@ -156,6 +156,14 @@ export default async function LessonPage({ params }: Props) {
               ))}
             </ul>
           </section>
+
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed px-4 py-3 text-sm">
+            <Bot className="size-4 text-primary" aria-hidden />
+            <span className="text-muted-foreground">Ficou alguma dúvida nesta lição?</span>
+            <Button asChild size="sm" variant="outline" className="ml-auto">
+              <Link href={`/tutor?lesson=${lesson.id}`}>Perguntar ao tutor</Link>
+            </Button>
+          </div>
 
           {/* 8 — Next lesson */}
           <nav aria-label="Navegação entre aulas" className="grid gap-3 border-t pt-6 sm:grid-cols-2">
