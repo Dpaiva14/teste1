@@ -595,6 +595,9 @@ model BacktestDecision {
   riskAmount Float?
   reason     EntryReason?
   note       String?
+  // how many of the strategy's rules the student ticked before deciding (process adherence, not outcome)
+  rulesMet   Int?
+  rulesTotal Int?
   createdAt  DateTime        @default(now())
 
   backtest Backtest @relation(fields: [backtestId], references: [id], onDelete: Cascade)
