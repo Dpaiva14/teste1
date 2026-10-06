@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { TIMEFRAMES } from "@/lib/market-data/types";
 
 export const candlesQuerySchema = z

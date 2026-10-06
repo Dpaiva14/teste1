@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { parseJson, userRoute } from "@/lib/http";
 import { idParams } from "@/features/trading/schemas";
 import { drawingsSchema } from "@/features/replay/schemas";

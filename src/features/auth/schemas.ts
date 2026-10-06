@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 // Client-safe (no server-only imports): shared by the forms and the API routes.
 

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { listEvents } from "@/features/economic-calendar/server/calendar-service";
 import { parseQuery, userRoute } from "@/lib/http";
 

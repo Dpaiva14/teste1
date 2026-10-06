@@ -1,6 +1,6 @@
 import "server-only";
 import { NextResponse, type NextRequest } from "next/server";
-import { ZodError, z, type ZodType } from "zod";
+import { ZodError, z, type ZodType } from "@/lib/zod";
 import { Prisma } from "@/database/client";
 import { getEnv } from "@/lib/env";
 import { HttpError, badRequest, forbidden, unprocessable } from "@/lib/errors";

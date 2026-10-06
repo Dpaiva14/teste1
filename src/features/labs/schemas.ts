@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { idSchema } from "@/lib/http-schemas";
 
 export const LAB_KINDS = ["market-structure", "levels", "fibonacci", "confluence"] as const;

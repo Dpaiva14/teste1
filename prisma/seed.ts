@@ -88,8 +88,9 @@ async function seedCurriculum() {
       : existing!;
     if (!editable) console.log(`  · module ${m.slug}: edited in admin — skipped (SEED_FORCE=1 to overwrite)`);
 
-    // Free the (moduleId, number) slots so reordering cannot violate the unique constraint mid-seed.
-    await prisma.lesson.updateMany({ where: { moduleId: mod.id, managedBySeed: true }, data: { number: { increment: 1000 } } });
+    // Free every (moduleId, number) slot so reordering cannot violate the unique constraint mid-seed. Lessons that
+    // keep a number >= 1000 afterwards are admin-created ones (not in the code); they are appended below.
+    await prisma.lesson.updateMany({ where: { moduleId: mod.id }, data: { number: { increment: 1000 } } });
 
     for (const [i, l] of m.lessons.entries()) {
       const ex = await prisma.lesson.findUnique({ where: { moduleId_slug: { moduleId: mod.id, slug: l.slug } } });
@@ -109,6 +110,8 @@ async function seedCurriculum() {
     }
     // Prune managed lessons that no longer exist in the definitions.
     await prisma.lesson.deleteMany({ where: { moduleId: mod.id, managedBySeed: true, slug: { notIn: m.lessons.map((l) => l.slug) } } });
+    const custom = await prisma.lesson.findMany({ where: { moduleId: mod.id, number: { gte: 1000 } }, orderBy: { number: "asc" }, select: { id: true } });
+    for (const [i, l] of custom.entries()) await prisma.lesson.update({ where: { id: l.id }, data: { number: m.lessons.length + 1 + i } });
 
     if (editable) {
       await seedQuiz({ moduleId: mod.id }, m.quiz.title, m.quiz.passScore ?? 70, m.quiz.questions);

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { isoDateSchema } from "@/lib/http-schemas";
 
 const level = z.number().finite().min(1).max(1_000_000).nullable().optional();

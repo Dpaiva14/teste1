@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 export const REPLAY_SYMBOLS = ["YM", "MYM", "US30"] as const;
 export const REPLAY_TIMEFRAMES = ["M5", "M15", "H1"] as const;

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { idSchema } from "@/lib/http-schemas";
 
 export const SYMBOLS = ["YM", "MYM", "US30"] as const;

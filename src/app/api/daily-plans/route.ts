@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { dailyPlanSchema } from "@/features/daily-plan/schemas";
 import { getPlan, savePlan } from "@/features/daily-plan/server/daily-plan-service";
 import { parseJson, parseQuery, userRoute } from "@/lib/http";

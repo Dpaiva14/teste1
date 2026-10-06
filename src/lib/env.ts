@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /**
  * Server-side environment, validated lazily on first use so `next build` works without secrets.

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /** Client-safe shared zod primitives (ids are cuid/uuid — validate shape early, fail fast with 422). */
 export const idSchema = z.string().min(8).max(64).regex(/^[A-Za-z0-9_-]+$/);

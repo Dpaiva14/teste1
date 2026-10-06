@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { idSchema } from "@/lib/http-schemas";
 
 export const quizSubmitSchema = z.object({

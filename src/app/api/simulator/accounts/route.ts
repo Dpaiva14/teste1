@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { created, parseJson, userRoute } from "@/lib/http";
 import { createAccount, listAccounts } from "@/features/simulator/server/simulator-service";
 
