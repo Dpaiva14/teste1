@@ -46,3 +46,22 @@ export async function api<T = unknown>(
 export function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : "Ocorreu um erro inesperado.";
 }
+
+/** multipart upload helper (the browser sets the boundary; no JSON content-type). */
+export async function uploadFile<T = unknown>(url: string, file: File, extra: Record<string, string> = {}): Promise<T> {
+  const form = new FormData();
+  form.set("file", file);
+  for (const [k, v] of Object.entries(extra)) form.set(k, v);
+  const res = await fetch(url, { method: "POST", body: form, credentials: "same-origin" });
+  let data: unknown = null;
+  try {
+    data = await res.json();
+  } catch {
+    /* ignore */
+  }
+  if (!res.ok) {
+    const e = (data as ErrorBody | null)?.error;
+    throw new ApiError(res.status, e?.code ?? "ERROR", e?.message ?? "Falha no upload.");
+  }
+  return data as T;
+}

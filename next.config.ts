@@ -20,8 +20,7 @@ const csp = [
   "object-src 'none'",
 ].join("; ");
 
-const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
+const baseHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -34,7 +33,11 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: baseHeaders },
+      // Uploaded files set their own, much stricter CSP (default-src 'none'; sandbox) in the route handler.
+      { source: "/((?!api/files/).*)", headers: [{ key: "Content-Security-Policy", value: csp }] },
+    ];
   },
 };
 

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2, CircleDot, Circle, Lock } from "lucide-react";
 import { ModuleIcon } from "@/components/module-icon";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getModuleDetail } from "@/features/academy/server/curriculum-service";
 import { requireUserPage } from "@/lib/auth/session";
-import { HttpError } from "@/lib/errors";
+import { orNotFound } from "@/lib/page-helpers";
 
 type Props = { params: Promise<{ module: string }> };
 
@@ -27,13 +26,7 @@ const STATUS_ICON = {
 export default async function ModulePage({ params }: Props) {
   const { module: slug } = await params;
   const user = await requireUserPage(`/academy/${slug}`);
-  let detail;
-  try {
-    detail = await getModuleDetail(user, slug);
-  } catch (e) {
-    if (e instanceof HttpError && e.status === 404) notFound();
-    throw e;
-  }
+  const detail = await orNotFound(getModuleDetail(user, slug));
   const m = detail.module;
   const pct = m.lessonCount ? Math.round((m.completedLessons / m.lessonCount) * 100) : 0;
   const first = detail.lessons.find((l) => l.status !== "completed") ?? detail.lessons[0];

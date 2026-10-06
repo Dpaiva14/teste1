@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleDot, Circle, Clock, Lock, Sparkles } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { ModuleIcon } from "@/components/module-icon";
@@ -14,7 +13,7 @@ import { QuizPlayer } from "@/features/academy/components/quiz-player";
 import { CompleteLessonButton } from "@/features/academy/components/complete-lesson-button";
 import { getLessonDetail, getModuleDetail } from "@/features/academy/server/curriculum-service";
 import { requireUserPage } from "@/lib/auth/session";
-import { HttpError } from "@/lib/errors";
+import { orNotFound } from "@/lib/page-helpers";
 import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ module: string; lesson: string }> };
@@ -32,14 +31,7 @@ export default async function LessonPage({ params }: Props) {
   const { module: moduleSlug, lesson: lessonSlug } = await params;
   const user = await requireUserPage(`/academy/${moduleSlug}/${lessonSlug}`);
 
-  let lesson;
-  let moduleDetail;
-  try {
-    [lesson, moduleDetail] = await Promise.all([getLessonDetail(user, moduleSlug, lessonSlug), getModuleDetail(user, moduleSlug)]);
-  } catch (e) {
-    if (e instanceof HttpError && e.status === 404) notFound();
-    throw e;
-  }
+  const [lesson, moduleDetail] = await orNotFound(Promise.all([getLessonDetail(user, moduleSlug, lessonSlug), getModuleDetail(user, moduleSlug)]));
 
   if ("locked" in lesson) {
     return (

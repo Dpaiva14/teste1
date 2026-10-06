@@ -29,8 +29,6 @@ export interface TicketProps {
   onSubmit: (input: OpenTradeInput) => Promise<boolean>;
 }
 
-const MANUAL_ITEMS = CHECKLIST.filter((i) => !i.auto);
-
 /**
  * Order ticket shared by the simulator and chart replay. Size comes FROM the risk budget and the stop distance;
  * the dollar risk is always shown next to the number of contracts. The checklist warns, it never blocks.
