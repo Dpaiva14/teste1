@@ -1,0 +1,750 @@
+// US30 Trading Academy — database schema.
+//
+// Conventions
+//  - Money & prices are stored as Float (double precision). The application layer rounds money to cents
+//    at its boundaries (see src/lib/money.ts). This is an education platform with demo accounts only.
+//  - Content (Course/Module/Lesson/Quiz/...) is seeded from src/modules and editable through /admin.
+//  - Rich, versioned payloads (lesson visuals/exercises, drawings, answers) are Json validated with zod
+//    in the application layer.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/database/generated"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum Difficulty {
+  BEGINNER
+  FOUNDATION
+  INTERMEDIATE
+  ADVANCED
+  PROFESSIONAL
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  NUMERIC
+  CHART_ANALYSIS
+  IDENTIFY_STRUCTURE
+  IDENTIFY_TREND
+  IDENTIFY_SUPPORT_RESISTANCE
+  POSITION_SIZE
+  CALCULATE_RR
+  VALID_SETUP
+}
+
+enum TradeDirection {
+  LONG
+  SHORT
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum TradeSource {
+  SIMULATOR
+  REPLAY
+  ASSESSMENT
+}
+
+enum ExitReason {
+  TAKE_PROFIT
+  STOP_LOSS
+  MANUAL
+  END_OF_DATA
+}
+
+enum EntryReason {
+  SETUP_VALID
+  FOMO
+  REVENGE
+  BOREDOM
+  FEAR_OF_MISSING_MOVE
+  OTHER
+}
+
+enum MarketBias {
+  BULLISH
+  BEARISH
+  NEUTRAL
+}
+
+enum EventImpact {
+  LOW
+  MEDIUM
+  HIGH
+  EXTREME
+}
+
+enum BacktestStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum BacktestChoice {
+  BUY
+  SELL
+  WAIT
+}
+
+enum BacktestOutcome {
+  WIN
+  LOSS
+  TIMEOUT
+  NO_TRADE
+}
+
+enum SimAccountStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum MediaKind {
+  IMAGE
+  PDF
+}
+
+enum TutorRole {
+  USER
+  ASSISTANT
+}
+
+// ───────────────────────────── Identity ─────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String? // null for accounts created only through OAuth
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(STUDENT)
+  timezone      String    @default("UTC")
+  disabledAt    DateTime?
+
+  // Gamification (denormalised from XpEvent for fast reads)
+  xp            Int       @default(0)
+  streakCount   Int       @default(0)
+  longestStreak Int       @default(0)
+  lastActiveOn  DateTime? @db.Date
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts           Account[]
+  passwordResets     PasswordResetToken[]
+  progress           Progress[]
+  quizAttempts       QuizAttempt[]
+  exerciseAttempts   ExerciseAttempt[]
+  trades             Trade[]
+  journalEntries     JournalEntry[]
+  backtests          Backtest[]
+  simulationAccounts SimulationAccount[]
+  replaySessions     ReplaySession[]
+  achievements       UserAchievement[]
+  xpEvents           XpEvent[]
+  dailyPlans         DailyPlan[]
+  mediaAssets        MediaAsset[]
+  tutorConversations TutorConversation[]
+  finalAssessments   FinalAssessment[]
+  createdEvents      EconomicEvent[]
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String // "google"
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique // sha256 of the emailed token; the raw token is never stored
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ───────────────────────────── Curriculum ─────────────────────────────
+
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  subtitle    String
+  description String
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  modules Module[]
+}
+
+model Module {
+  id               String     @id @default(cuid())
+  courseId         String
+  slug             String
+  number           Int // 1..26 — position in the main navigation
+  level            Int // 1..10 — progression level that gates this module
+  title            String
+  summary          String
+  difficulty       Difficulty @default(BEGINNER)
+  estimatedMinutes Int        @default(0)
+  icon             String? // lucide icon name
+  published        Boolean    @default(true)
+  managedBySeed    Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+  quiz    Quiz?
+
+  @@unique([courseId, slug])
+  @@unique([courseId, number])
+  @@index([level])
+}
+
+model Lesson {
+  id               String     @id @default(cuid())
+  moduleId         String
+  slug             String
+  number           Int // order inside the module
+  title            String
+  summary          String
+  difficulty       Difficulty @default(BEGINNER)
+  content          String // markdown — main explanation
+  example          String? // markdown — realistic worked example
+  visual           Json? // VisualSpec (chart scenario / diagram) — see src/features/academy/schemas.ts
+  exercise         Json? // ExerciseSpec (interactive practice)     — see src/features/academy/schemas.ts
+  takeaways        String[]
+  videoUrl         String?
+  estimatedMinutes Int        @default(5)
+  xpReward         Int        @default(20)
+  published        Boolean    @default(true)
+  managedBySeed    Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  module   Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  quiz     Quiz?
+  progress Progress[]
+  assets   MediaAsset[]
+
+  @@unique([moduleId, slug])
+  @@unique([moduleId, number])
+}
+
+// A quiz belongs to exactly one lesson OR one module (enforced by a CHECK constraint in the migration).
+model Quiz {
+  id        String   @id @default(cuid())
+  lessonId  String?  @unique
+  moduleId  String?  @unique
+  title     String
+  passScore Int      @default(70) // percentage
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson    Lesson?       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  module    Module?       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions Question[]
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id               String       @id @default(cuid())
+  quizId           String
+  orderIndex       Int
+  type             QuestionType
+  prompt           String
+  explanation      String // always shown after answering — "score + explanation", not just right/wrong
+  chartRef         String? // DEMO chart scenario id used by chart-based question types
+  numericAnswer    Float? // NUMERIC / POSITION_SIZE / CALCULATE_RR
+  numericTolerance Float?
+  numericUnit      String?
+  points           Int          @default(1)
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@index([quizId, orderIndex])
+}
+
+model Answer {
+  id          String  @id @default(cuid())
+  questionId  String
+  orderIndex  Int
+  text        String
+  isCorrect   Boolean @default(false)
+  explanation String? // feedback specific to this option
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId, orderIndex])
+}
+
+// ───────────────────────────── Learning progress ─────────────────────────────
+
+model Progress {
+  id            String         @id @default(cuid())
+  userId        String
+  lessonId      String
+  status        ProgressStatus @default(NOT_STARTED)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  timeSpentSec  Int            @default(0)
+  bestQuizScore Int? // percentage
+  quizAttempts  Int            @default(0)
+  updatedAt     DateTime       @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId, status])
+}
+
+model QuizAttempt {
+  id           String   @id @default(cuid())
+  userId       String
+  quizId       String
+  scorePercent Int
+  correctCount Int
+  totalCount   Int
+  passed       Boolean
+  results      Json // per-question result summary (see src/features/quiz/schemas.ts)
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([userId, quizId])
+  @@index([userId, createdAt])
+}
+
+// Attempts at interactive labs (market structure, draw levels, fibonacci, confluence, ...).
+model ExerciseAttempt {
+  id           String   @id @default(cuid())
+  userId       String
+  exerciseKey  String // e.g. "market-structure", "draw-levels", "fibonacci", "confluence"
+  scenarioId   String
+  scorePercent Int
+  answer       Json
+  feedback     Json?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, exerciseKey])
+}
+
+// ───────────────────────────── Gamification ─────────────────────────────
+
+model Achievement {
+  id          String @id @default(cuid())
+  key         String @unique
+  title       String
+  description String
+  icon        String
+  category    String
+  xpReward    Int    @default(0)
+  sortOrder   Int    @default(0)
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+}
+
+// XP ledger. (userId, kind, refId) is unique so awarding XP is idempotent.
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String // LESSON_COMPLETE, QUIZ_PASSED, EXERCISE, JOURNAL_REVIEW, ...
+  refId     String // lesson id / quiz id / day key — whatever makes the award unique
+  amount    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, refId])
+  @@index([userId, createdAt])
+}
+
+// ───────────────────────────── Trading activity ─────────────────────────────
+
+model SimulationAccount {
+  id             String           @id @default(cuid())
+  userId         String
+  name           String
+  currency       String           @default("USD")
+  initialBalance Float
+  balance        Float // realised balance (initial + closed P&L − fees)
+  peakEquity     Float
+  maxDrawdown    Float            @default(0) // absolute, in account currency
+  status         SimAccountStatus @default(ACTIVE)
+
+  // The simulator replays a deterministic DEMO feed. The server owns the cursor so state is authoritative.
+  feedSymbol     String   @default("US30")
+  feedTimeframe  String   @default("M5")
+  feedSeed       Int
+  feedCursor     Int      @default(200)
+  dayStartEquity Float
+  dayStartDate   DateTime @db.Date
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades Trade[]
+
+  @@index([userId, status])
+}
+
+model ReplaySession {
+  id         String        @id @default(cuid())
+  userId     String
+  symbol     String
+  timeframe  String
+  startDate  DateTime      @db.Date // the "historical" date the student picked (DEMO series unless a provider is configured)
+  seed       Int
+  cursor     Int // number of visible candles
+  totalBars  Int
+  drawings   Json          @default("[]") // levels, fibonacci, structure labels drawn by the student
+  status     SessionStatus @default(IN_PROGRESS)
+  evaluation Json?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades Trade[]
+
+  @@index([userId, status])
+}
+
+model Trade {
+  id                  String         @id @default(cuid())
+  userId              String
+  simulationAccountId String?
+  replaySessionId     String?
+  source              TradeSource
+  symbol              String // YM | MYM | US30
+  direction           TradeDirection
+  contracts           Int
+  entryPrice          Float
+  stopLoss            Float?
+  takeProfit          Float?
+  exitPrice           Float?
+  status              TradeStatus    @default(OPEN)
+  exitReason          ExitReason?
+  openedAt            DateTime       @default(now())
+  closedAt            DateTime?
+  openBarIndex        Int? // feed index when opened (for replay / simulator)
+  closeBarIndex       Int?
+  fees                Float          @default(0)
+  pnl                 Float? // net of fees, account currency
+  riskAmount          Float? // $ risk at entry, from stop distance
+  rMultiple           Float?
+  marginUsed          Float?
+  entryReason         EntryReason? // "Why are you entering?"
+  entryReasonNote     String?
+  checklist           Json? // answers to the pre-trade checklist
+  confluenceScore     Int?
+  thesis              String? // free text: why am I considering this trade / what invalidates it
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  simulationAccount SimulationAccount? @relation(fields: [simulationAccountId], references: [id], onDelete: Cascade)
+  replaySession     ReplaySession?     @relation(fields: [replaySessionId], references: [id], onDelete: Cascade)
+  journalEntry      JournalEntry?
+
+  @@index([userId, openedAt])
+  @@index([simulationAccountId, status])
+  @@index([replaySessionId])
+}
+
+model JournalEntry {
+  id                 String         @id @default(cuid())
+  userId             String
+  tradeId            String?        @unique // optional link to a simulated trade
+  tradeDate          DateTime
+  instrument         String
+  direction          TradeDirection
+  timeframe          String
+  setup              String
+  session            String? // ASIAN | LONDON | NEW_YORK | OVERLAP | OFF_HOURS
+  entryPrice         Float
+  stopLoss           Float
+  takeProfit         Float?
+  exitPrice          Float?
+  contracts          Int
+  riskAmount         Float // $ at risk
+  result             Float // net P&L in account currency
+  rMultiple          Float
+  emotionalState     String // CALM | CONFIDENT | ANXIOUS | FOMO | FRUSTRATED | BORED | EUPHORIC | TIRED
+  mistakes           String[] // tags: MOVED_STOP | OVERSIZED | EARLY_EXIT | NO_PLAN | CHASED | REVENGE | OTHER
+  mistakeNote        String?
+  lesson             String?
+  notes              String?
+  followedPlan       Boolean?
+  processRating      Int? // 1..5 — "was my process correct, regardless of the result?"
+  screenshotBeforeId String?
+  screenshotAfterId  String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trade            Trade?      @relation(fields: [tradeId], references: [id], onDelete: SetNull)
+  screenshotBefore MediaAsset? @relation("JournalBefore", fields: [screenshotBeforeId], references: [id], onDelete: SetNull)
+  screenshotAfter  MediaAsset? @relation("JournalAfter", fields: [screenshotAfterId], references: [id], onDelete: SetNull)
+
+  @@index([userId, tradeDate])
+  @@index([userId, setup])
+}
+
+model Backtest {
+  id             String         @id @default(cuid())
+  userId         String
+  name           String
+  symbol         String
+  timeframe      String
+  rangeStart     DateTime       @db.Date
+  rangeEnd       DateTime       @db.Date
+  seed           Int
+  dataSource     String         @default("DEMO")
+  strategyKey    String
+  riskPercent    Float
+  initialBalance Float
+  cursor         Int // number of candles currently visible
+  totalBars      Int
+  status         BacktestStatus @default(IN_PROGRESS)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  decisions BacktestDecision[]
+
+  @@index([userId, status])
+}
+
+model BacktestDecision {
+  id         String          @id @default(cuid())
+  backtestId String
+  seq        Int
+  barIndex   Int // index of the last visible candle when the decision was taken
+  choice     BacktestChoice
+  entry      Float?
+  stop       Float?
+  target     Float?
+  exitIndex  Int?
+  exitPrice  Float?
+  outcome    BacktestOutcome
+  rMultiple  Float?
+  pnl        Float?
+  riskAmount Float?
+  reason     EntryReason?
+  note       String?
+  createdAt  DateTime        @default(now())
+
+  backtest Backtest @relation(fields: [backtestId], references: [id], onDelete: Cascade)
+
+  @@unique([backtestId, seq])
+}
+
+model FinalAssessment {
+  id           String        @id @default(cuid())
+  userId       String
+  seed         Int
+  status       SessionStatus @default(IN_PROGRESS)
+  answers      Json?
+  review       Json? // process-quality review produced by the evaluator
+  processScore Int? // 0..100 — quality of process, NOT trade outcome
+  submittedAt  DateTime?
+  createdAt    DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+model DailyPlan {
+  id           String     @id @default(cuid())
+  userId       String
+  date         DateTime   @db.Date
+  bias         MarketBias @default(NEUTRAL)
+  keyLevels    Json       @default("{}") // { pdh, pdl, pwh, pwl, majorSR, supply, demand }
+  events       String[]
+  mustHappen   String? // what must happen before entry?
+  invalidation String? // what invalidates the idea?
+  maxRisk      Float? // $ or % — see maxRiskUnit
+  maxRiskUnit  String     @default("USD")
+  maxTrades    Int?
+  notes        String?
+  review       String? // end-of-day review: did I follow the plan?
+  followedPlan Boolean?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+// ───────────────────────────── Reference data ─────────────────────────────
+
+model GlossaryTerm {
+  id                   String   @id @default(cuid())
+  slug                 String   @unique
+  term                 String
+  category             String
+  definition           String
+  simpleExplanation    String
+  technicalExplanation String
+  example              String
+  related              String[] // slugs of related terms
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([term])
+}
+
+model EconomicEvent {
+  id          String      @id @default(cuid())
+  title       String
+  country     String      @default("US")
+  category    String // CPI | PPI | NFP | FOMC | GDP | RETAIL_SALES | PMI | JOBLESS_CLAIMS | FED_SPEECH | OTHER
+  impact      EventImpact
+  scheduledAt DateTime
+  forecast    String?
+  previous    String?
+  actual      String?
+  description String?
+  source      String? // where the schedule was taken from
+  sourceUrl   String?
+  isDemo      Boolean     @default(false) // true = illustrative placeholder, NOT a real release schedule
+  createdById String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([scheduledAt])
+  @@index([impact])
+}
+
+// Cache for candles obtained from a real Market Data Provider. The DEMO provider generates candles
+// deterministically and does not write here.
+model MarketData {
+  id        String   @id @default(cuid())
+  symbol    String
+  timeframe String
+  ts        DateTime // candle open time (UTC)
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float?
+  source    String // provider name
+  fetchedAt DateTime @default(now())
+
+  @@unique([symbol, timeframe, ts, source])
+  @@index([symbol, timeframe, ts])
+}
+
+// ───────────────────────────── Media ─────────────────────────────
+
+model MediaAsset {
+  id         String    @id @default(cuid())
+  ownerId    String
+  lessonId   String?
+  kind       MediaKind
+  mimeType   String
+  filename   String
+  sizeBytes  Int
+  storageKey String    @unique // path relative to STORAGE_DIR; never user-controlled
+  createdAt  DateTime  @default(now())
+
+  owner  User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  lesson Lesson?        @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  before JournalEntry[] @relation("JournalBefore")
+  after  JournalEntry[] @relation("JournalAfter")
+
+  @@index([ownerId])
+  @@index([lessonId])
+}
+
+// ───────────────────────────── AI tutor ─────────────────────────────
+
+model TutorConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages TutorMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model TutorMessage {
+  id             String    @id @default(cuid())
+  conversationId String
+  role           TutorRole
+  content        String
+  createdAt      DateTime  @default(now())
+
+  conversation TutorConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
