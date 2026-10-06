@@ -161,5 +161,5 @@ export const created = (data: object) => NextResponse.json(data, { status: 201 }
 export const noContent = () => new NextResponse(null, { status: 204 });
 
 /** Validate a free-form id param (cuid) to fail fast with 422 instead of a DB round-trip. */
-export const idSchema = z.string().min(8).max(40).regex(/^[A-Za-z0-9_-]+$/);
+export { idSchema } from "@/lib/http-schemas";
 export { unprocessable };
