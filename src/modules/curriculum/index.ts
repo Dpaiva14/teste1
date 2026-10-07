@@ -21,6 +21,9 @@ import { tradingPsychology } from "./19-trading-psychology";
 import { dailyPlanAndChecklist } from "./20-daily-plan-and-checklist";
 import { chartReplay } from "./21-chart-replay";
 import { tradingSimulator } from "./22-trading-simulator";
+import { tradingJournal } from "./23-trading-journal";
+import { backtesting } from "./24-backtesting";
+import { professionalDevelopment } from "./25-professional-development";
 
 /** All curriculum modules, in navigation order (01 → 26). */
-export const MODULES: readonly ModuleDef[] = [tradingFoundations, futuresFundamentals, readingCandles, trend, supportResistance, supplyDemand, marketStructure, fibonacci, priceAction, liquidity, confluence, marketSessions, us30Dow, economicFundamentals, confluenceTradingFramework, tradeSetups, riskManagement, tradeManagement, tradingPsychology, dailyPlanAndChecklist, chartReplay, tradingSimulator].sort((a, b) => a.number - b.number);
+export const MODULES: readonly ModuleDef[] = [tradingFoundations, futuresFundamentals, readingCandles, trend, supportResistance, supplyDemand, marketStructure, fibonacci, priceAction, liquidity, confluence, marketSessions, us30Dow, economicFundamentals, confluenceTradingFramework, tradeSetups, riskManagement, tradeManagement, tradingPsychology, dailyPlanAndChecklist, chartReplay, tradingSimulator, tradingJournal, backtesting, professionalDevelopment].sort((a, b) => a.number - b.number);
