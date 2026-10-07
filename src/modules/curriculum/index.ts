@@ -15,6 +15,7 @@ import { us30Dow } from "./13-us30-dow";
 import { economicFundamentals } from "./14-economic-fundamentals";
 import { confluenceTradingFramework } from "./15-confluence-trading-framework";
 import { tradeSetups } from "./16-trade-setups";
+import { riskManagement } from "./17-risk-management";
 
 /** All curriculum modules, in navigation order (01 → 26). */
-export const MODULES: readonly ModuleDef[] = [tradingFoundations, futuresFundamentals, readingCandles, trend, supportResistance, supplyDemand, marketStructure, fibonacci, priceAction, liquidity, confluence, marketSessions, us30Dow, economicFundamentals, confluenceTradingFramework, tradeSetups].sort((a, b) => a.number - b.number);
+export const MODULES: readonly ModuleDef[] = [tradingFoundations, futuresFundamentals, readingCandles, trend, supportResistance, supplyDemand, marketStructure, fibonacci, priceAction, liquidity, confluence, marketSessions, us30Dow, economicFundamentals, confluenceTradingFramework, tradeSetups, riskManagement].sort((a, b) => a.number - b.number);
