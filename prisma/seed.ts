@@ -8,7 +8,7 @@ import { GLOSSARY } from "../src/modules/glossary";
 import { ACHIEVEMENTS } from "../src/modules/achievements";
 import { COURSE_SLUG } from "../src/modules/course";
 import { BRAND } from "../src/modules/brand";
-import type { LessonDef, QuestionDef } from "../src/modules/types";
+import type { LessonDef, ModuleDef, QuestionDef } from "../src/modules/types";
 import { Prisma } from "../src/database/generated/client";
 
 /**
@@ -50,12 +50,12 @@ async function seedQuiz(target: { lessonId?: string; moduleId?: string }, title:
   if (aRows.length) await prisma.answer.createMany({ data: aRows });
 }
 
-function lessonData(def: LessonDef, number: number) {
+function lessonData(def: LessonDef, number: number, moduleDifficulty: ModuleDef["difficulty"]) {
   return {
     number,
     title: def.title,
     summary: def.summary,
-    difficulty: def.difficulty ?? "BEGINNER",
+    difficulty: def.difficulty ?? moduleDifficulty,
     content: def.content,
     example: def.example ?? null,
     visual: (def.visual ?? undefined) as Prisma.InputJsonValue | undefined,
@@ -98,7 +98,7 @@ async function seedCurriculum() {
         await prisma.lesson.update({ where: { id: ex.id }, data: { number: i + 1 } });
         continue;
       }
-      const data = lessonData(l, i + 1);
+      const data = lessonData(l, i + 1, m.difficulty);
       const lesson = await prisma.lesson.upsert({
         where: { moduleId_slug: { moduleId: mod.id, slug: l.slug } },
         create: { moduleId: mod.id, slug: l.slug, ...data, visual: data.visual ?? undefined, exercise: data.exercise ?? undefined },
