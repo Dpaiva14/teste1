@@ -21,6 +21,7 @@ const ok = (cond: boolean, msg: string) => {
   console.log(`${cond ? "PASS" : "FAIL"}  ${msg}`);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- a smoke test reads loosely typed JSON responses
 type Res = { status: number; json: any };
 const call = (page: Page, path: string, method = "GET", body?: unknown): Promise<Res> =>
   page.evaluate(
@@ -168,7 +169,7 @@ async function main() {
     const sub = await call(a, `/api/assessment/${id}/submit`, "POST");
     const rep = sub.json.assessment?.report;
     ok(sub.status === 200 && rep.evaluation.criteria.length === 12 && rep.revealCandles.length === 120, "assessment submitted: 12 criteria and the revealed candles are returned only now");
-    ok(rep.evaluation.criteria.reduce((n: number, c: any) => n + c.max, 0) === 100, "assessment criteria add up to 100 points");
+    ok(rep.evaluation.criteria.reduce((n: number, c: { max: number }) => n + c.max, 0) === 100, "assessment criteria add up to 100 points");
     ok((await call(a, `/api/assessment/${id}/submit`, "POST")).status === 409, "a submitted assessment cannot be submitted twice");
     ok((await call(o, `/api/assessment/${id}`)).status === 404, "another user cannot read the assessment");
   } else {
