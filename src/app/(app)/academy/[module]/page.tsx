@@ -32,7 +32,7 @@ export default async function ModulePage({ params }: Props) {
   const first = detail.lessons.find((l) => l.status !== "completed") ?? detail.lessons[0];
 
   return (
-    <div className="mx-auto grid max-w-4xl gap-6">
+    <div className="mx-auto grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-6">
       <nav aria-label="Localização" className="text-sm text-muted-foreground">
         <Link href="/academy" className="hover:text-foreground">Academy</Link> <span aria-hidden>›</span> Módulo {String(m.number).padStart(2, "0")}
       </nav>
@@ -80,9 +80,9 @@ export default async function ModulePage({ params }: Props) {
             </CardContent>
           </Card>
 
-          <section aria-labelledby="lessons-h" className="grid gap-2">
+          <section aria-labelledby="lessons-h" className="grid grid-cols-[minmax(0,1fr)] gap-2">
             <h2 id="lessons-h" className="text-lg font-semibold">Aulas</h2>
-            <ol className="grid gap-2">
+            <ol className="grid grid-cols-[minmax(0,1fr)] gap-2">
               {detail.lessons.map((l) => (
                 <li key={l.id}>
                   <Link href={`/academy/${m.slug}/${l.slug}`} className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3 transition-colors hover:border-primary/50 hover:bg-accent/30">

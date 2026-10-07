@@ -118,6 +118,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /*
+   * A single-column grid ("grid gap-4") has an implicit `auto` track, which grows to the min-content width of its widest
+   * child (a long URL, a nowrap table header…) and pushes the whole page sideways on phones. `minmax(0, 1fr)` lets the
+   * track shrink to its container so wide children scroll or wrap inside it. Grids that declare their own columns
+   * (any `grid-cols-*` / `grid-flow-*` utility) are left alone.
+   */
+  .grid:not([class*="grid-cols"]):not([class*="grid-flow"]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
