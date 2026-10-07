@@ -40,14 +40,17 @@ export function answersToOverlays(a: Answers, windowStart: number, lastRelIndex:
 }
 
 /** The computed reference reading, drawn in muted tones so it never competes with the student's own marks. */
-export function referenceOverlays(ref: ReferenceDTO, windowStart: number): ChartOverlay[] {
+export function referenceOverlays(ref: ReferenceDTO, windowStart: number, range?: { min: number; max: number }): ChartOverlay[] {
   const out: ChartOverlay[] = [];
-  ref.levels.forEach((l, n) => out.push({ type: "hline", id: `rf-lv-${n}`, price: l.price, label: `Ref. nível (${l.touches}×)`, tone: "muted", dashed: true }));
-  ref.pools.forEach((p, n) => out.push({ type: "hline", id: `rf-pl-${n}`, price: p.price, label: `Ref. liquidez (${p.side === "high" ? "highs" : "lows"})`, tone: "warning", dashed: true }));
-  ref.zones.slice(-4).forEach((z, n) =>
-    out.push({ type: "zone", id: `rf-zn-${n}`, top: z.top, bottom: z.bottom, fromIndex: Math.max(0, z.index - windowStart), label: `Ref. ${z.role === "demand" ? "procura" : "oferta"}`, tone: "muted" }),
-  );
-  const leg = [...ref.legs].sort((x, y) => y.sizeAtr - x.sizeAtr)[0];
+  // Only references inside the price range being displayed: an off-screen level would stretch the chart's y-axis.
+  const inRange = (price: number) => !range || (price >= range.min && price <= range.max);
+  ref.levels.filter((l) => inRange(l.price)).forEach((l, n) => out.push({ type: "hline", id: `rf-lv-${n}`, price: l.price, label: `Ref. nível (${l.touches}×)`, tone: "muted", dashed: true }));
+  ref.pools.filter((p) => inRange(p.price)).forEach((p, n) => out.push({ type: "hline", id: `rf-pl-${n}`, price: p.price, label: `Ref. liquidez (${p.side === "high" ? "highs" : "lows"})`, tone: "warning", dashed: true }));
+  ref.zones
+    .filter((z) => inRange(z.top) && inRange(z.bottom))
+    .slice(-4)
+    .forEach((z, n) => out.push({ type: "zone", id: `rf-zn-${n}`, top: z.top, bottom: z.bottom, fromIndex: Math.max(0, z.index - windowStart), label: `Ref. ${z.role === "demand" ? "procura" : "oferta"}`, tone: "muted" }));
+  const leg = [...ref.legs].filter((l) => inRange(l.a.price) && inRange(l.b.price)).sort((x, y) => y.sizeAtr - x.sizeAtr)[0];
   if (leg) out.push(fibOverlay("rf-fib", leg.a, leg.b, windowStart));
   return out;
 }

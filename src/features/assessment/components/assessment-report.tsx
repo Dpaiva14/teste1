@@ -36,12 +36,19 @@ export function AssessmentReport({ state }: { state: AssessmentStateDTO }) {
 
   const candles = useMemo(() => [...state.candles, ...report.revealCandles], [state.candles, report.revealCandles]);
   const lastRel = state.candles.length - 1;
+  const startIndex = Math.max(0, lastRel - 70);
+  const priceRange = useMemo(() => {
+    const shown = candles.slice(startIndex);
+    const lo = Math.min(...shown.map((c) => c.low), ...[a.entry, a.stop, a.target].filter((p): p is number => p !== null));
+    const hi = Math.max(...shown.map((c) => c.high), ...[a.entry, a.stop, a.target].filter((p): p is number => p !== null));
+    return { min: lo - (hi - lo) * 0.1, max: hi + (hi - lo) * 0.1 };
+  }, [candles, startIndex, a.entry, a.stop, a.target]);
   const overlays = useMemo<ChartOverlay[]>(() => {
     const out = answersToOverlays(a, state.windowStart, lastRel);
     out.push({ type: "vline", id: "decision", index: lastRel, label: "Decisão", tone: "primary" });
-    if (showRef) out.push(...referenceOverlays(reference, state.windowStart));
+    if (showRef) out.push(...referenceOverlays(reference, state.windowStart, priceRange));
     return out;
-  }, [a, state.windowStart, lastRel, reference, showRef]);
+  }, [a, state.windowStart, lastRel, reference, showRef, priceRange]);
   const extra = useMemo(() => [a.entry, a.stop, a.target].filter((p): p is number => p !== null), [a.entry, a.stop, a.target]);
 
   async function again() {
@@ -100,7 +107,7 @@ export function AssessmentReport({ state }: { state: AssessmentStateDTO }) {
           <CandleChart
             candles={candles}
             visibleCount={150}
-            startIndex={Math.max(0, lastRel - 70)}
+            startIndex={startIndex}
             overlays={overlays}
             extraPrices={extra}
             height={460}
