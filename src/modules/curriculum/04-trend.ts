@@ -42,7 +42,7 @@ No gráfico lateral, o preço volta várias vezes à mesma zona de cima e de bai
         mc("Como se define uma tendência de alta?", ["Preço acima da média", "Máximos mais altos e mínimos mais altos", "Candles verdes", "Volume a subir"], 1, "Alta = sequência de HH e HL."),
         tf("Se o diário está em alta, o M5 tem de estar em alta.", false, "Cada timeframe tem a sua leitura; podem divergir."),
         chart("IDENTIFY_TREND", "structure-bear-01", "Qual é a tendência neste gráfico?", ["Alta", "Baixa", "Lateral", "Impossível saber"], 1, "Máximos e mínimos progressivamente mais baixos (LH e LL) = tendência de baixa."),
-        chart("IDENTIFY_TREND", "structure-range-01", "E neste?", ["Alta", "Baixa", "Lateral", "Rompimento"], 2, "Os swings sobrepõem-se, sem progressão: mercado lateral."),
+        chart("IDENTIFY_TREND", "structure-range-01", "Observa o gráfico apresentado: qual é a tendência?", ["Alta", "Baixa", "Lateral", "Rompimento"], 2, "Os swings sobrepõem-se, sem progressão: mercado lateral."),
       ],
     },
     {
@@ -224,7 +224,7 @@ Hipótese educativa: entrada acima do máximo do M15 em **39.030**, invalidaçã
     questions: [
       mc("Como se define uma tendência de baixa?", ["Máximos e mínimos mais baixos (LH e LL)", "Candles vermelhos", "Preço abaixo de 40.000", "Volume a descer"], 0, "Baixa = sequência de LH e LL."),
       chart("IDENTIFY_TREND", "structure-bull-01", "Qual é a tendência neste gráfico?", ["Alta", "Baixa", "Lateral", "Impossível saber"], 0, "Sequência de HH e HL = tendência de alta."),
-      chart("IDENTIFY_TREND", "structure-range-01", "E neste?", ["Alta", "Baixa", "Lateral", "Rompimento"], 2, "Swings sobrepostos, sem progressão: mercado lateral."),
+      chart("IDENTIFY_TREND", "structure-range-01", "Observa o gráfico apresentado: qual é a tendência?", ["Alta", "Baixa", "Lateral", "Rompimento"], 2, "Swings sobrepostos, sem progressão: mercado lateral."),
       chart("CHART_ANALYSIS", "structure-shift-bull-to-bear", "Neste gráfico, o que mudou a meio?", ["Nada", "A estrutura passou de alta para baixa (quebra do último mínimo e novos LH/LL)", "O volume", "O spread"], 1, "A quebra do último HL seguida de LH e LL marca uma mudança de estrutura."),
       mc("Qual é a função tipicamente atribuída ao timeframe superior?", ["Refinar a entrada", "Dar contexto: tendência e níveis", "Calcular margem", "Prever notícias"], 1, "O timeframe superior dá o contexto; o inferior refina a entrada."),
       tf("Existe uma combinação de timeframes universalmente correta.", false, "Não existe; o importante é escolher, testar e ser consistente."),
