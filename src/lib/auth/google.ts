@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { createRemoteJWKSet, jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
-import { getEnv, isProd } from "@/lib/env";
+import { getEnv, cookieSecure } from "@/lib/env";
 import { badRequest, notConfigured } from "@/lib/errors";
 
 const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -54,7 +54,7 @@ export async function beginGoogleAuth(next: string | null): Promise<string> {
     .setExpirationTime(`${TX_MAX_AGE_SEC}s`)
     .sign(secret());
   const jar = await cookies();
-  jar.set(TX_COOKIE, tx, { httpOnly: true, secure: isProd(), sameSite: "lax", path: "/api/auth/google", maxAge: TX_MAX_AGE_SEC });
+  jar.set(TX_COOKIE, tx, { httpOnly: true, secure: cookieSecure(), sameSite: "lax", path: "/api/auth/google", maxAge: TX_MAX_AGE_SEC });
 
   const url = new URL(AUTH_ENDPOINT);
   url.search = new URLSearchParams({
@@ -73,7 +73,7 @@ export async function beginGoogleAuth(next: string | null): Promise<string> {
 export async function consumeTransaction(stateFromQuery: string | null): Promise<OAuthTransaction> {
   const jar = await cookies();
   const raw = jar.get(TX_COOKIE)?.value;
-  jar.set(TX_COOKIE, "", { httpOnly: true, secure: isProd(), sameSite: "lax", path: "/api/auth/google", maxAge: 0 });
+  jar.set(TX_COOKIE, "", { httpOnly: true, secure: cookieSecure(), sameSite: "lax", path: "/api/auth/google", maxAge: 0 });
   if (!raw || !stateFromQuery) throw badRequest("Sessão OAuth em falta ou expirada.");
   let payload: Record<string, unknown>;
   try {

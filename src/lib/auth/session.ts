@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma, type Role } from "@/database/client";
-import { getEnv, isProd } from "@/lib/env";
+import { getEnv, cookieSecure } from "@/lib/env";
 import { forbidden, unauthorized } from "@/lib/errors";
 
 export const SESSION_COOKIE = "academy_session";
@@ -63,7 +63,7 @@ export async function setSessionCookie(userId: string, sessionVersion: number): 
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: isProd(),
+    secure: cookieSecure(),
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE_SEC,
@@ -72,7 +72,7 @@ export async function setSessionCookie(userId: string, sessionVersion: number): 
 
 export async function clearSessionCookie(): Promise<void> {
   const jar = await cookies();
-  jar.set(SESSION_COOKIE, "", { httpOnly: true, secure: isProd(), sameSite: "lax", path: "/", maxAge: 0 });
+  jar.set(SESSION_COOKIE, "", { httpOnly: true, secure: cookieSecure(), sameSite: "lax", path: "/", maxAge: 0 });
 }
 
 /**

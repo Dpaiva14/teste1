@@ -1,0 +1,62 @@
+# US30 Trading Academy — app + PostgreSQL.
+#
+#   cp .env.docker.example .env.docker      # fill in POSTGRES_PASSWORD and AUTH_SECRET (and the first admin)
+#   docker compose --env-file .env.docker up -d --build
+#   open http://localhost:3000
+#
+# The database is not published on the host; only the app is. Data lives in two named volumes (db-data, app-storage):
+# `docker compose down` keeps them, `docker compose down -v` deletes them.
+name: us30-academy
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: academy
+      POSTGRES_USER: academy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD em .env.docker (openssl rand -hex 24)}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academy -d academy"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+    image: us30-trading-academy:local
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://academy:${POSTGRES_PASSWORD}@db:5432/academy
+      AUTH_SECRET: ${AUTH_SECRET:?Defina AUTH_SECRET em .env.docker (openssl rand -base64 48)}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      # Secure cookies need HTTPS (browsers drop them on plain http, except on localhost). Set COOKIE_SECURE=true behind HTTPS.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      MARKET_DATA_PROVIDER: demo
+      # First admin (created if missing) — optional.
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      # Optional features: empty values simply leave them switched off.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      SMTP_URL: ${SMTP_URL:-}
+      EMAIL_FROM: ${EMAIL_FROM:-US30 Trading Academy <no-reply@example.com>}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    volumes:
+      - app-storage:/app/storage
+
+volumes:
+  db-data:
+  app-storage:

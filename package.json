@@ -22,7 +22,10 @@
     "content:validate": "tsx scripts/validate-content.ts",
     "e2e": "tsx scripts/e2e-smoke.ts",
     "postinstall": "prisma generate",
-    "admin:create": "tsx scripts/create-admin.ts"
+    "admin:create": "tsx scripts/create-admin.ts",
+    "docker:up": "docker compose --env-file .env.docker up -d --build",
+    "docker:down": "docker compose --env-file .env.docker down",
+    "docker:logs": "docker compose --env-file .env.docker logs -f app"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

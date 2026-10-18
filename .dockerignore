@@ -1,0 +1,22 @@
+.git
+.gitignore
+.github
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+.e2e
+*.log
+*.tsbuildinfo
+
+# generated inside the image by `prisma generate`
+src/database/generated
+
+# local state and secrets never go into an image
+storage
+.env
+.env.*
+!.env.example
+!.env.docker.example

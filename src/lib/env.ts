@@ -20,6 +20,8 @@ const schema = z.object({
   AI_MODEL: z.string().optional(),
   STORAGE_DIR: z.string().default("./storage"),
   TRUST_PROXY: z.enum(["true", "false"]).default("false"),
+  /** Overrides the `Secure` flag of the session cookies (default: on in production). Only turn it off to serve over plain http. */
+  COOKIE_SECURE: z.enum(["true", "false"]).optional(),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -41,3 +43,13 @@ export function getEnv(): Env {
 }
 
 export const isProd = () => process.env.NODE_ENV === "production";
+
+/**
+ * `Secure` flag for cookies. Secure by default in production; `COOKIE_SECURE=false` exists for running the production
+ * build over plain http (e.g. a local Docker stack reached through a LAN address — browsers drop Secure cookies on http,
+ * except on localhost). Behind HTTPS always leave it on.
+ */
+export const cookieSecure = (): boolean => {
+  const override = getEnv().COOKIE_SECURE;
+  return override === undefined ? isProd() : override === "true";
+};

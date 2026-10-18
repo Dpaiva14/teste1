@@ -16,10 +16,25 @@ function createClient(): PrismaClient {
   return new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 }
 
-export const prisma: PrismaClient = globalForPrisma.__prisma ?? createClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.__prisma = prisma;
+function getClient(): PrismaClient {
+  const existing = globalForPrisma.__prisma;
+  if (existing) return existing;
+  const created = createClient();
+  // Cached on globalThis in every environment: the client is created lazily on first use (see below), so one instance per process.
+  globalForPrisma.__prisma = created;
+  return created;
 }
+
+/**
+ * Lazy: the client is only created when something actually queries the database. Importing this module (as `next build`
+ * does while collecting route data) therefore never needs DATABASE_URL — the build works without any secrets or database.
+ */
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getClient();
+    const value = Reflect.get(client, prop, client) as unknown;
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
 
 export * from "./generated/client";

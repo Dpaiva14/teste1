@@ -65,6 +65,28 @@ npm run dev                      # http://localhost:3000
 `AUTH_SECRET` is required (≥ 32 chars): `openssl rand -base64 48`. Re-running the seed is safe: content edited in the admin
 area is flagged `managedBySeed = false` and is skipped unless you set `SEED_FORCE=1`.
 
+### Docker (app + PostgreSQL in one command)
+
+Requires Docker with Compose v2. No Node or PostgreSQL needed on the host.
+
+```bash
+cp .env.docker.example .env.docker      # fill in POSTGRES_PASSWORD, AUTH_SECRET and the first admin (SEED_ADMIN_*)
+docker compose --env-file .env.docker up -d --build      # or: npm run docker:up
+```
+
+Open <http://localhost:3000> (change the port with `APP_PORT`) and sign in with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`.
+
+- On every start the container applies the migrations (`prisma migrate deploy`) and re-syncs the curriculum (idempotent; lessons edited in
+  the admin area are left alone). Set `RUN_SEED=false` to skip the seed or `RUN_MIGRATIONS=false` to skip the migrations.
+- Data lives in two named volumes: `db-data` (PostgreSQL) and `app-storage` (uploads). `docker compose down` keeps them; `down -v` deletes them.
+- The database is **not** published on the host. The app runs as the unprivileged `node` user and has a health check on `/api/health`.
+- `AUTH_SECRET` and `POSTGRES_PASSWORD` are mandatory — Compose refuses to start without them. Use URL-safe characters for the database password
+  (`openssl rand -hex 24`).
+- `COOKIE_SECURE` defaults to `false` in the compose file so that login works over plain `http` (browsers drop `Secure` cookies on plain http,
+  except on `localhost`; Safari drops them even there). **Set `COOKIE_SECURE=true` as soon as the app is served over HTTPS** (put a TLS reverse
+  proxy such as Caddy or nginx in front, set `APP_URL` to the public URL and `TRUST_PROXY=true`). Outside Docker the default is already secure in production.
+- Useful commands: `npm run docker:logs`, `npm run docker:down`, `docker compose --env-file .env.docker exec app node_modules/.bin/tsx scripts/create-admin.ts you@example.com 'a long passphrase'`.
+
 ### Environment variables
 
 | Variable | Required | Purpose |
@@ -78,6 +100,7 @@ area is flagged `managedBySeed = false` and is skipped unless you set `SEED_FORC
 | `ANTHROPIC_API_KEY` / `AI_MODEL` | no | Enables the AI tutor and the AI narrative of the chart analyzer. **There is no default model**: both must be set, otherwise the endpoints answer `503 NOT_CONFIGURED` and the chart analyzer still shows its deterministic reading. Never sent to the browser. |
 | `STORAGE_DIR` | no | Where uploaded screenshots / PDFs are stored. Use a persistent volume in production. |
 | `TRUST_PROXY` | no | `true` only behind a trusted reverse proxy (enables per-IP rate limiting from `X-Forwarded-For`). |
+| `COOKIE_SECURE` | no | Forces the `Secure` flag of the session cookies on/off. Default: on in production. Only turn it off to serve the production build over plain http. |
 
 ### Scripts
 
@@ -163,6 +186,11 @@ Checked in this repository:
   AI graceful degradation, and the final assessment end to end (including once-only XP).
 - Manual browser sessions with Playwright for the labs, replay (drawings, preparation scoring), backtest, journal uploads,
   admin (roles, guards, video allow-list, quiz editor) and the AI endpoints against a **local mock** of the provider.
+
+- **Docker**: the image was built from a clean checkout and run against a real `postgres:16` container: migrations apply, the seed runs, the container starts as a
+  non-root user, `/api/health` answers, a restart is idempotent and the 45-check `npm run e2e` passes against it. That test used a copy of the Dockerfile adapted to
+  this sandbox (no `apt-get` step, and the egress proxy CA) because the sandbox has no container networking; the `apt-get install openssl` step of the real
+  Dockerfile and `docker compose up` itself were **not** executed here. `docker compose config` validates the compose file.
 
 **Not** verified — be aware before relying on it:
 

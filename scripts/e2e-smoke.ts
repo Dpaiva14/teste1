@@ -61,7 +61,7 @@ async function main() {
 
   // ── Public surface ────────────────────────────────────────────────────────
   const anon = await (await newCtx()).newPage();
-  for (const path of ["/", "/login", "/register", "/glossary", "/sources", "/disclaimer"]) {
+  for (const path of ["/", "/login", "/register", "/glossary", "/sources", "/disclaimer", "/api/health"]) {
     const res = await anon.goto(`${BASE}${path}`);
     ok(res?.status() === 200, `public page ${path} → 200`);
   }
